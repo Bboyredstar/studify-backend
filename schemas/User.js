@@ -11,4 +11,6 @@ const UserSchema = new Schema({
 }, { collection: 'users', discriminatorKey: '_type' });
 
 UserSchema.virtual('name').get(() => this.fname + ' ' + this.lname)
+
+
 module.exports = mongoose.model('User', UserSchema);

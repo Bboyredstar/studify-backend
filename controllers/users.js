@@ -24,5 +24,16 @@ const createUser = async (req, res) => {
   }
 }
 
+const createTeacher = async (req, res) => {
+  const { fname, lname, email, password } = req.body
+  try {
+    const teacher = new Teacher({ fname, lname, email, password })
+    return res.status(201).json(teacher.__t)
+  } catch (error) {
+    console.log(error);
+    return res.status(409).json({ message: error })
+  }
+}
 
-module.exports = getUsers
+module.exports = { getUsers, createUser, createTeacher }
+

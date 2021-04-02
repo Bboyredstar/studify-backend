@@ -1,45 +1,23 @@
 const { Router } = require('express');
-const router = Router();
-const bcrypt = require('bcrypt')
-const {
-  check,
-  validationResult
-} = require("express-validator");
-const jwt = require("jsonwebtoken");
-
-router.post('/api/signin', [
-  [check('email', 'value is not a email').isEmail().normalizeEmail()],
-  check('password', 'password must be 6+ long').isLength({ min: 6 })
-], async (res, req) => {
-  try {
-    const { email, password } = req.body
-    const errors = validationResult(req)
-    if (errors) {
-      return res.status(400).json({
-        errors: errors.array(),
-        message: 'Incorrect auth data'
-      })
-    }
+const { signIn, signUp, refreshToken } = require('../controllers/auth')
+const validator = require('../utils/userValidator')
+const { check } = require('express-validator')
+const router = Router()
 
 
 
-  }
-  catch (err) {
-    return res.status(500).json({
-      message: err
-    })
-  }
-})
+router.post('/signin', validator([
+  check('email', 'Некорректный email').isEmail().normalizeEmail(),
+  check('password', 'Пароль должен содержать не меньше 6 символов').isLength({ min: 6 })
+]), signIn)
 
-router.post('/api/register', async (req, res) => {
-  try {
+router.post('/register', validator([
+  check('email', 'Некорректный email').isEmail().normalizeEmail(),
+  check('password', 'Пароль должен содержать не меньше 6 символов').isLength({ min: 6 }),
+  check('fname', 'Имя не может быть пустым').not().isEmpty().isAlpha().isLength({ min: 2 }),
+  check('lname', 'Фамилия не может быть пустой').not().isEmpty().isAlpha().isLength({ min: 2 })
+]), signUp)
 
-  }
-  catch (err) {
-    return res.status(500).json({
-      message: err
-    })
-  }
-})
+router.post('/refresh', validator([check('refreshToken', 'Токен не может быть пустым').not().isEmpty()]), refreshToken)
 
 module.exports = router
