@@ -28,7 +28,11 @@ const signIn = async (req, res) => {
     updateToken(user.id)
       .then((tokens) => {
         return res.status(200).json({
-          token: tokens
+          data: {
+            id: user.id,
+            name: user.fname + ' ' + user.lname,
+            token: tokens
+          }
         })
       })
       .catch((err) => { return res.status(400).json({ message: 'Ошибка данных' }) })
@@ -46,24 +50,24 @@ const signUp = async (req, res) => {
     const { email, password, fname, lname } = req.body
     const user = await User.findOne({ email: email })
     if (user) {
-      return res.status(401).json({ message: `Пользователь с таким email уже существует` })
+      return res.status(400).json({ message: `Пользователь с таким email уже существует` })
     }
     const salt = bcrypt.genSaltSync(12)
     const hashedPassword = bcrypt.hashSync(password, salt)
     const newUser = new User({ id: uuidv4(), fname, lname, email, password: hashedPassword })
+    const name = newUser.fname + ' ' + newUser.lname
+
     await newUser.save()
     const tokens = await updateToken(newUser.id)
     if (!tokens) {
-      console.log('tokens ' + tokens);
-      return res.status(401).json({ message: 'Ошибка данных' })
+      return res.status(400).json({ message: 'Ошибка данных' })
     }
     return res.status(201).json({
       message: 'Пользователь создан',
-      data: { user_id: newUser.id, username: newUser.fname, tokens }
+      data: { user_id: newUser.id, name: name, tokens }
     })
   }
   catch (err) {
-    console.log(err);
     return res.status(500).json({
       message: JSON.stringify(err)
     })
@@ -84,7 +88,7 @@ const refreshToken = (req, res) => {
         if (token === null) {
           throw new Error('Invalid token')
         }
-        console.log(token);
+
         return updateToken(token._id)
       })
       .then((tokens) => res.status(200).json(tokens))

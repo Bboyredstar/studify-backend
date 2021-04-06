@@ -11,7 +11,6 @@ const UserSchema = new Schema({
   favorite_courses: [{ type: Schema.ObjectId, ref: 'Course' }]
 }, { collection: 'users', discriminatorKey: 'type' });
 
-UserSchema.virtual('name').get(() => this.fname + ' ' + this.lname)
 
 
 module.exports = mongoose.model('User', UserSchema);
