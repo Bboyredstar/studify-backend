@@ -1,5 +1,5 @@
 const secret = {
-  access: { secret: process.env.ACESS_TOKEN_SECRET },
+  access: { secret: process.env.ACCESS_TOKEN_SECRET },
   refresh: { secret: process.env.REFRESH_TOKEN_SECRET }
 }
 const token = {

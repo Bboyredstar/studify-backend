@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({ limit: '30mb', extended: true }))
 app.use(cors())
 app.use('/api/auth', require('./routes/apiAuth'))
 app.use('/api/users', require('./routes/users'))
-
+mongoose.set('toJSON', { virtuals: true })
 
 const start = async () => {
   try {

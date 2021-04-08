@@ -10,15 +10,17 @@ module.exports = function (req, res, next) {
       if (payload.type !== 'access_token') {
         return res.status(400).json({ message: 'Invalid token' })
       }
+      req.params = { id: payload.userId }
       next()
-    } catch (e) {
+    }
+    catch (err) {
       if (err instanceof jwt.TokenExpiredError) {
         return res.status(401).json({ message: 'Token expired' })
       }
       if (err instanceof jwt.JsonWebTokenError) {
         return res.status(401).json({ message: 'Invalid token' })
       }
+
     }
-    return res.status(401).json({ message: 'Доступ запрещен' })
   }
 }

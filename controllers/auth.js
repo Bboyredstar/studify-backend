@@ -28,11 +28,7 @@ const signIn = async (req, res) => {
     updateToken(user.id)
       .then((tokens) => {
         return res.status(200).json({
-          data: {
-            id: user.id,
-            name: user.fname + ' ' + user.lname,
-            token: tokens
-          }
+          data: { profile: { ...user._doc, name: user.name, password: '' }, tokens }
         })
       })
       .catch((err) => { return res.status(400).json({ message: 'Ошибка данных' }) })
@@ -47,40 +43,38 @@ const signIn = async (req, res) => {
 
 const signUp = async (req, res) => {
   try {
-    const { email, password, fname, lname } = req.body
-    const user = await User.findOne({ email: email })
+    const user = await User.findOne({ email: req.body.email })
     if (user) {
       return res.status(400).json({ message: `Пользователь с таким email уже существует` })
     }
     const salt = bcrypt.genSaltSync(12)
-    const hashedPassword = bcrypt.hashSync(password, salt)
-    const newUser = new User({ id: uuidv4(), fname, lname, email, password: hashedPassword })
-    const name = newUser.fname + ' ' + newUser.lname
-
-    await newUser.save()
+    const hashedPassword = bcrypt.hashSync(req.body.password, salt)
+    let newUser = new User({ id: uuidv4(), ...req.body, password: hashedPassword })
+    newUser.save()
     const tokens = await updateToken(newUser.id)
     if (!tokens) {
       return res.status(400).json({ message: 'Ошибка данных' })
     }
     return res.status(201).json({
       message: 'Пользователь создан',
-      data: { user_id: newUser.id, name: name, tokens }
+      data: { profile: { ...newUser._doc, name: newUser.name, password: '' }, tokens }
     })
   }
   catch (err) {
+
     return res.status(500).json({
-      message: JSON.stringify(err)
+      error: JSON.stringify(err),
+      message: 'Ошибка регистрации, повторите позже'
     })
   }
 }
 
 const refreshToken = (req, res) => {
   const { refreshToken } = req.body
-  let payload
   try {
-    payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
+    const payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET)
     if (payload.type !== 'refresh_token') {
-      return res.status(400).json({ message: 'Invalid token' })
+      return res.status(401).json({ message: 'Invalid token' })
     }
     Token.findOne({ tokenId: payload.id })
       .exec()
@@ -88,18 +82,17 @@ const refreshToken = (req, res) => {
         if (token === null) {
           throw new Error('Invalid token')
         }
-
-        return updateToken(token._id)
+        return updateToken(token.userId)
       })
       .then((tokens) => res.status(200).json(tokens))
-      .catch((err) => { return res.status(400).json({ message: err.message }) })
+      .catch((err) => { return res.status(401).json({ message: err.message }) })
   }
   catch (err) {
     if (err instanceof jwt.TokenExpiredError) {
-      return res.status(400).json({ message: 'Token expired' })
+      return res.status(401).json({ message: 'Token expired' })
     }
     if (err instanceof jwt.JsonWebTokenError) {
-      return res.status(400).json({ message: 'Invalid token' })
+      return res.status(401).json({ message: 'Invalid token' })
     }
   }
 }
