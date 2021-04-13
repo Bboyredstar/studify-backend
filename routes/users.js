@@ -1,5 +1,5 @@
 const { Router } = require('express')
-const { getUsers, createUser, createTeacher } = require('../controllers/users')
+const { getUsers, updateUser, getUser, becomeTeacher } = require('../controllers/users')
 const validator = require('../utils/tokenValidater')
 const router = Router();
 const {
@@ -8,7 +8,9 @@ const {
 } = require("express-validator");
 
 router.get('/', getUsers)
-// router.put('/update', [validator], updateUser)
+router.get('/:userId', getUser)
+router.patch('/update', [validator], updateUser)
+router.patch('/instructor', [validator], becomeTeacher)
+// router.patch('/instructor', [validator], setTeacher)
 // router.delete('/delete', [validator], deleteUser)
-router.post('/create-teacher', createTeacher)
 module.exports = router
