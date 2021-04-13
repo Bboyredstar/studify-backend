@@ -1,6 +1,4 @@
 const User = require('../schemas/User')
-const { v4: uuidv4 } = require('uuid');
-const { json } = require('body-parser');
 
 const getUsers = async (req, res) => {
   try {
@@ -62,6 +60,27 @@ const updateUser = async (req, res) => {
   }
 }
 
+const becomeTeacher = async (req, res) => {
+  try {
+    if (!req.params.id) {
+      return res.status(401).json({ message: 'Access denied' })
+    }
+    const user = await User.findOne({ id: req.params.id })
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' })
+    }
+    console.log(user);
+    if (user.role === 'user') {
+      const updateUser = await user.updateOne({ role: 'teacher' })
+      return res.status(201).json({ message: 'Updating success!', profile: { ...updateUser, password: '' } })
+    }
+    return res.status(400).json({ message: 'User is a teacher already!' })
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: 'Updating error' })
+  }
+}
+
 const deleteUser = async (req, res) => {
   try {
     if (!req.params.id) {
@@ -81,5 +100,5 @@ const deleteUser = async (req, res) => {
 
 
 
-module.exports = { getUsers, createUser, updateUser, getUser }
+module.exports = { getUsers, createUser, updateUser, getUser, becomeTeacher }
 
